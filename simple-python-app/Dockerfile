@@ -1,12 +1,10 @@
-FROM python:3.11-slim-buster
+FROM python:3.11
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
-COPY . .
+COPY . .  # Copies everything from the build context
 
-EXPOSE 5000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"] # Or your WSGI server command
+# CMD ["python", "your_script.py"]  # Or your application's startup command
