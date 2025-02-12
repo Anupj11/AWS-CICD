@@ -17,21 +17,20 @@ phases:
       - pip install -r requirements.txt
   pre_build:
     commands:
-      - ls -l  # Debugging: List files in the root of the repository
-      - cd simple-python-app  # Change to the correct directory
-      - ls -l # Debugging: list files inside simple-python-app to make sure files are present
-      - python -m unittest discover  # Now the tests should run in the correct place
+      - echo "Running tests..."
+      - cd simple-python-app  # Change directory before running tests!
+      - python -m unittest discover
   build:
     commands:
       - echo "Building Docker image..."
-      - cd simple-python-app
-      - docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD" "$DOCKER_REGISTRY_URL" # Log in to the registry
-      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_NAME:latest" . # Use parameter store values
+      - cd simple-python-app  # Change to the directory containing Dockerfile
+      - docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD" "$DOCKER_REGISTRY_URL"
+      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_NAME:latest" . # The "." is crucial!
       - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_NAME:latest"
   post_build:
     commands:
       - echo "Build completed successfully!"
 artifacts:
   files:
-    - '**/*'
-  base-directory: simple-python-app
+    - '**/*'  # Package everything within simple-python-app
+  base-directory: simple-python-app # Correct base directory
