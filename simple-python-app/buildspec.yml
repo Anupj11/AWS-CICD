@@ -2,29 +2,33 @@ version: 0.2
 
 env:
   parameter-store:
-    DOCKER_REGISTRY_USERNAME: /myapp/docker-credentials/username
-    DOCKER_REGISTRY_PASSWORD: /myapp/docker-credentials/password
-    DOCKER_REGISTRY_URL: /myapp/docker-registry/url
+    DOCKER_REGISTRY_USERNAME: /python-app/docker-credentials/username
+    DOCKER_REGISTRY_PASSWORD: /python-app/docker-credentials/password
+    DOCKER_REGISTRY_URL: /python-app/docker-registry/url
+    IMAGE_NAME: /python-app  # Make the image name configurable
+
 phases:
   install:
     runtime-versions:
       python: 3.11
-  pre_build:
     commands:
       - echo "Installing dependencies..."
-      - pip install -r simple-python-app/requirements.txt
-  build:
+      - cd simple-python-app  # Change directory *before* installing dependencies
+      - pip install -r requirements.txt
+  pre_build:
     commands:
       - echo "Running tests..."
-      - cd simple-python-app/
+      - python -m unittest discover # Run tests
+  build:
+    commands:
       - echo "Building Docker image..."
-      - docker build -t " $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest" .
-      - docker push  "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest"
+      - docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD" "$DOCKER_REGISTRY_URL" # Log in!
+      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest" .
+      - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest"
   post_build:
     commands:
       - echo "Build completed successfully!"
 artifacts:
   files:
-    - '**/*'
-  base-directory: ../simple-python-app
-
+    - '**/*' # Package everything within simple-python-app
+  base-directory: simple-python-app # Correct base directory
