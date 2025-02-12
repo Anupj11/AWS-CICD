@@ -4,8 +4,8 @@ env:
   parameter-store:
     DOCKER_REGISTRY_USERNAME: /python-app/docker-credentials/username
     DOCKER_REGISTRY_PASSWORD: /python-app/docker-credentials/password
-    DOCKER_REGISTRY_URL: /python-app/docker-registry/url
-    IMAGE_NAME: /python-app  # Make the image name configurable
+    DOCKER_REGISTRY_URL: /python-app/docker-registry/url  # e.g., 1234567890.dkr.ecr.us-east-1.amazonaws.com
+    IMAGE_NAME: /python-app/image-name # e.g., my-python-app
 
 phases:
   install:
@@ -13,22 +13,25 @@ phases:
       python: 3.11
     commands:
       - echo "Installing dependencies..."
-      - cd simple-python-app  # Change directory *before* installing dependencies
+      - cd simple-python-app
       - pip install -r requirements.txt
   pre_build:
     commands:
-      - echo "Running tests..."
-      - python -m unittest discover # Run tests
+      - ls -l  # Debugging: List files in the root of the repository
+      - cd simple-python-app  # Change to the correct directory
+      - ls -l # Debugging: list files inside simple-python-app to make sure files are present
+      - python -m unittest discover  # Now the tests should run in the correct place
   build:
     commands:
       - echo "Building Docker image..."
-      - docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD" "$DOCKER_REGISTRY_URL" # Log in!
-      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest" .
-      - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/python-app:latest"
+      - cd simple-python-app
+      - docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD" "$DOCKER_REGISTRY_URL" # Log in to the registry
+      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_NAME:latest" . # Use parameter store values
+      - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_NAME:latest"
   post_build:
     commands:
       - echo "Build completed successfully!"
 artifacts:
   files:
-    - '**/*' # Package everything within simple-python-app
-  base-directory: simple-python-app # Correct base directory
+    - '**/*'
+  base-directory: simple-python-app
